@@ -1,5 +1,6 @@
 # finance/views.py
-
+from django.contrib import messages
+from django.db.models import ProtectedError
 from django.http import JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse_lazy
@@ -107,6 +108,13 @@ class StatusDeleteView(DictionaryContextMixin, DeleteView):
     model = Status
     template_name = 'finance/dictionary_confirm_delete.html'
     success_url = reverse_lazy('finance:status-list')
+
+    def post(self, request, *args, **kwargs):
+        try:
+            return super().delete(request, *args, **kwargs)
+        except ProtectedError:
+            messages.error(request, "Этот статус не может быть удален, так как он используется в транзакциях.")
+            return redirect('finance:status-list')
 
 
 class TypeListView(DictionaryContextMixin, ListView):
